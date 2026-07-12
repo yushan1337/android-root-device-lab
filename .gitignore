@@ -221,3 +221,4 @@ __marimo__/
 reports/*.json
 reports/*.md
 !reports/.gitkeep
+tests/test.py
