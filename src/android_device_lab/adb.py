@@ -65,7 +65,7 @@ def get_battery_info() -> BetteryInfo:
     return battery_info
 def get_storage_info() -> StorageInfo:
     logging.info("开始获取存储信息...")
-    result = run_command(["adb", "shell", "df", "/data"]).stdout.strip()
+    result = run_command(["adb", "shell", "df", "-h","|","grep", "/data$"]).stdout.strip()
     result=result.split()
     storage_info = StorageInfo(
         total=result[1],
