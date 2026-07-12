@@ -19,6 +19,14 @@ def main() -> None:
            f"安全补丁: {device_info.security_patch}"]
         for l in line:
             print(l)
+    elif choice == "3":
+        battery_info = adb.get_battery_info()
+        line = [f"温度: {battery_info.temperature}",
+                f"交流电状态: {battery_info.ac_power_status}",
+                f"电压: {battery_info.voltage}",
+                f"电量: {battery_info.level}"]
+        for l in line:
+            print(l)        
 if __name__ == "__main__":
     main()
 
