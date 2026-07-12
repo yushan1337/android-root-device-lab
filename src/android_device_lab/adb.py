@@ -45,7 +45,7 @@ def get_battery_info() -> BetteryInfo:
             temperature = line.split(":")[1].strip()
         elif "AC powered" in line:
             ac_power_status = line.split(":")[1].strip()
-        elif "voltage" in line:
+        elif line.startswith("voltage"):
             voltage = line.split(":")[1].strip()
         elif "level" in line:
             level = line.split(":")[1].strip()

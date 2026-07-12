@@ -22,9 +22,9 @@ def main() -> None:
     elif choice == "3":
         battery_info = adb.get_battery_info()
         line = [f"温度: {battery_info.temperature}",
-                f"交流电状态: {battery_info.ac_power_status}",
-                f"电压: {battery_info.voltage}",
-                f"电量: {battery_info.level}"]
+                f"交流电状态: {int(battery_info.ac_power_status)/10}°C",
+                f"电压: {battery_info.voltage}mv",
+                f"电量: {battery_info.level}%"]
         for l in line:
             print(l)        
 if __name__ == "__main__":
