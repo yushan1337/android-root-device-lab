@@ -4,6 +4,7 @@ def main() -> None:
     print("请输入功能数字:")
     print("1. 列出已连接的设备")
     print("2. 获取设备信息")
+    print("3. 获取电池信息")
     choice = input("选择功能: ")
     if choice == "1":
         adb.list_devices()

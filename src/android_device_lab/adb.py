@@ -40,20 +40,23 @@ def get_device_info() -> DeviceInfo:
 def get_battery_info() -> BetteryInfo:
     logging.info("开始获取电池信息...")
     op = run_command(["adb", "shell", "dumpsys", "battery"]).stdout.strip()
-    for line in op.splitlines():
+    for line in op.splitlines():           # ← 先在外面解析
         if "temperature" in line:
             temperature = line.split(":")[1].strip()
         elif "AC powered" in line:
             ac_power_status = line.split(":")[1].strip()
-        elif line.startswith("voltage"):
+        elif line.strip().startswith("voltage"):
             voltage = line.split(":")[1].strip()
         elif "level" in line:
             level = line.split(":")[1].strip()
-    battery_info = BetteryInfo(
+
+    battery_info = BetteryInfo(            # ← 解析完再构造
         temperature=temperature,
         ac_power_status=ac_power_status,
         voltage=voltage,
         level=level
     )
+    logging.info(f"获取电池信息完成: {battery_info}")
+    return battery_info
     logging.info(f"获取电池信息完成: {battery_info}")
     return battery_info
