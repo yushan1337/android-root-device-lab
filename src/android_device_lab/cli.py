@@ -5,10 +5,10 @@ def main() -> None:
     print("1. 列出已连接的设备")
     print("2. 获取设备信息")
     print("3. 获取电池信息")
+    print("4. 获取存储信息")
     choice = input("选择功能: ")
     if choice == "1":
-        adb.list_devices()
-        return 0
+        print(adb.list_devices().stdout)
     elif choice == "2":
         device_info = adb.get_device_info()
         line =[f"型号: {device_info.model}",
@@ -22,12 +22,20 @@ def main() -> None:
             print(l)
     elif choice == "3":
         battery_info = adb.get_battery_info()
-        line = [f"温度: {battery_info.temperature}",
-                f"交流电状态: {int(battery_info.ac_power_status)/10}°C",
+        line = [f"温度: {int(battery_info.temperature)/10}°C",
+                f"交流电状态: {battery_info.ac_power_status}",
                 f"电压: {battery_info.voltage}mv",
                 f"电量: {battery_info.level}%"]
         for l in line:
-            print(l)        
+            print(l)     
+    elif choice == "4":
+        storage_info = adb.get_storage_info()
+        line = [f"总容量: {storage_info.total}",
+                f"已用容量: {storage_info.used}",
+                f"可用容量: {storage_info.availiable}",
+                f"使用百分比: {storage_info.use_percentage}"]
+        for l in line:
+            print(l)   
 if __name__ == "__main__":
     main()
 

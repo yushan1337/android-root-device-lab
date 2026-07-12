@@ -18,10 +18,15 @@ class BetteryInfo:
     ac_power_status: str = "N/A"  # 默认值为 "N/A"，表示未获取到交流电状态信息
     voltage: str = "N/A"  # 默认值为 "N/A"，表示未获取到电压信息
     level: str = "N/A"  # 默认值为 "N/A"，表示未获取到电量信息  
+@dataclass
+class StorageInfo:
+    total: str
+    used: str
+    availiable: str
+    use_percentage: str
 from android_device_lab.command import CommandResult, run_command
 def list_devices() -> CommandResult:
     result = run_command(["adb", "devices"])
-    print(result.stdout)
     return result
 def get_device_info() -> DeviceInfo:
     logging.info("开始获取设备信息...")
@@ -58,5 +63,15 @@ def get_battery_info() -> BetteryInfo:
     )
     logging.info(f"获取电池信息完成: {battery_info}")
     return battery_info
-    logging.info(f"获取电池信息完成: {battery_info}")
-    return battery_info
+def get_storage_info() -> StorageInfo:
+    logging.info("开始获取存储信息...")
+    result = run_command(["adb", "shell", "df", "/data"]).stdout.strip()
+    result=result.split()
+    storage_info = StorageInfo(
+        total=result[1],
+        used=result[2],
+        availiable=result[3],
+        use_percentage=result[4]
+    )
+    logging.info(f"获取存储信息完成: {storage_info}")
+    return storage_info
