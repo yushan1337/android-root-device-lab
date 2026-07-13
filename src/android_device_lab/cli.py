@@ -1,6 +1,6 @@
 import android_device_lab.adb as adb
 from datetime import datetime
-from android_device_lab.exporters import DiagnosticReport, export_json_report
+from android_device_lab.exporters import DiagnosticReport, export_json_report,export_markdown_report, get_all_info
 from pathlib import Path
 
 def main() -> None:
@@ -12,6 +12,7 @@ def main() -> None:
         print("3. 获取电池信息")
         print("4. 获取存储信息")
         print("5. 导出诊断报告为JSON文件")
+        print("6. 导出诊断报告为Markdown文件")
         choice = input("选择功能: ")
         try:
             choice = int(choice)
@@ -53,21 +54,19 @@ def main() -> None:
                 print(l)   
 
         elif choice == 5:
-            device_info = adb.get_device_info()
-            battery_info = adb.get_battery_info()
-            storage_info = adb.get_storage_info()
-            report = DiagnosticReport(
-                generated_at=datetime.now().strftime("%Y-%m-%d_%H%M%S"),
-                device=device_info,
-                battery=battery_info,
-                storage=storage_info
-            )
-            timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-            report_dir = Path("reports") / timestamp
+            report = get_all_info()
+            report_dir = Path("reports") / report.generated_at
             json_file = report_dir / "report.json"
             export_json_report(report, json_file)
             print(f"诊断报告已导出到: {json_file.resolve()}")
-
+        
+        elif choice == 6:
+            report = get_all_info()
+            report_dir = Path("reports") / report.generated_at
+            markdown_file = report_dir / "report.md"
+            export_markdown_report(report, markdown_file)
+            print(f"诊断报告已导出到: {markdown_file.resolve()}")
+        
         else:
             print("无效的选择，请输入有效的数字.")
             continue
