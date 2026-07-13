@@ -11,6 +11,7 @@ def main() -> None:
         print("2. 获取设备信息")
         print("3. 获取电池信息")
         print("4. 获取存储信息")
+        print("5. 导出诊断报告为JSON文件")
         choice = input("选择功能: ")
         try:
             choice = int(choice)
@@ -66,7 +67,7 @@ def main() -> None:
             json_file = report_dir / "report.json"
             export_json_report(report, json_file)
             print(f"诊断报告已导出到: {json_file.resolve()}")
-            
+
         else:
             print("无效的选择，请输入有效的数字.")
             continue
