@@ -7,6 +7,7 @@ class CommandResult:
     exit_code: int
     stdout: str
     stderr: str
+
 def run_command(args: list[str]) -> CommandResult:
     logging.info(f"执行命令: {' '.join(args)}")
     try:

@@ -2,32 +2,37 @@
 # adb.py
 import logging
 from dataclasses import dataclass
+from android_device_lab.command import CommandResult, run_command
+
 @dataclass
 class DeviceInfo:
-    product: str
-    model: str
-    manufacturer: str
-    android_version: str
-    sdk_version: str
-    build_fingerprint: str
-    brand: str
-    security_patch: str
+    product: str = "N/A"  
+    model: str = "N/A"
+    manufacturer: str = "N/A"
+    android_version: str = "N/A"
+    sdk_version: str = "N/A"
+    build_fingerprint: str = "N/A"
+    brand: str = "N/A"
+    security_patch: str = "N/A"
+
 @dataclass
 class BetteryInfo:
-    temperature: str = "N/A"  # 默认值为 "N/A"，表示未获取到温度信息
-    ac_power_status: str = "N/A"  # 默认值为 "N/A"，表示未获取到交流电状态信息
-    voltage: str = "N/A"  # 默认值为 "N/A"，表示未获取到电压信息
-    level: str = "N/A"  # 默认值为 "N/A"，表示未获取到电量信息  
+    temperature: str = "N/A"  
+    ac_power_status: str = "N/A" 
+    voltage: str = "N/A"  
+    level: str = "N/A"  
+
 @dataclass
 class StorageInfo:
-    total: str
-    used: str
-    availiable: str
-    use_percentage: str
-from android_device_lab.command import CommandResult, run_command
+    total: str = "N/A"
+    used: str = "N/A"
+    availiable: str = "N/A"
+    use_percentage: str = "N/A"
+
 def list_devices() -> CommandResult:
     result = run_command(["adb", "devices"])
     return result
+
 def get_device_info() -> DeviceInfo:
     logging.info("开始获取设备信息...")
     device_info = DeviceInfo(
@@ -42,6 +47,7 @@ def get_device_info() -> DeviceInfo:
     )
     logging.info(f"获取设备信息完成: {device_info}")
     return device_info
+
 def get_battery_info() -> BetteryInfo:
     logging.info("开始获取电池信息...")
     op = run_command(["adb", "shell", "dumpsys", "battery"]).stdout.strip()
@@ -66,6 +72,7 @@ def get_battery_info() -> BetteryInfo:
     battery_info = BetteryInfo(**data)  # 只传收集到的字段
     logging.info(f"获取电池信息完成: {battery_info}")
     return battery_info
+
 def get_storage_info() -> StorageInfo:
     logging.info("开始获取存储信息...")
     result = run_command(["adb", "shell", "df", "-h","|","grep", "/data$"]).stdout.strip()
