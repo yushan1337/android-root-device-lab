@@ -1,9 +1,7 @@
-from datetime import datetime
-from android_device_lab.exporters import DiagnosticReport, export_json_report,export_markdown_report, get_all_info
+from android_device_lab.exporters import export_json_report,export_markdown_report, get_all_info
 from pathlib import Path
 import argparse
 import logging
-from android_device_lab import adb
 logger = logging.getLogger(__name__)
 
 def configure_logging(verbose: bool) -> None:
@@ -50,7 +48,11 @@ def display_storage_info(storage_info) -> None:
             print(l)
 
 def display_battery_info(battery_info) -> None:
-        line = [f"温度: {int(battery_info.temperature)/10}°C",
+        if battery_info.temperature != "N/A":
+            temperature = f"{int(battery_info.temperature) / 10}°C"
+        else:
+            temperature = "N/A"
+        line = [f"温度: {temperature}",
                 f"交流电状态: {battery_info.ac_power_status}",
                 f"电压: {battery_info.voltage}mv",
                 f"电量: {battery_info.level}%"]
@@ -122,13 +124,13 @@ def main(argv: list[str] | None = None) -> None:
         report_format=args.format,
     )
 
-    if args.deviceinfo:
+    if args.device_info:
         display_device_info(report.device)
 
-    if args.batteryinfo:
+    if args.battery_info:
         display_battery_info(report.battery)
 
-    if args.storageinfo:
+    if args.storage_info:
         display_storage_info(report.storage)
 if __name__ == "__main__":
     main()
