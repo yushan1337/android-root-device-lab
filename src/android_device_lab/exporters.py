@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from android_device_lab.adb import DeviceInfo, BatteryInfo, StorageInfo
 from dataclasses import asdict
 from pathlib import Path
 import json
@@ -8,9 +7,9 @@ import android_device_lab.adb
 @dataclass
 class DiagnosticReport:
     generated_at: str
-    device: DeviceInfo
-    battery: BatteryInfo
-    storage: StorageInfo
+    device: android_device_lab.adb.DeviceInfo
+    battery: android_device_lab.adb.BatteryInfo
+    storage: android_device_lab.adb.StorageInfo
 
 
 def export_json_report(report: DiagnosticReport, output: Path) -> None:

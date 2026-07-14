@@ -91,10 +91,8 @@ def parse_storage_info(raw: str) -> StorageInfo:
             availiable=parts[3],
             use_percentage=parts[4],
         )
-    logging.info(f"获取存储信息完成")
     return StorageInfo()
 
 def get_storage_info(serial: str) -> StorageInfo:
     result = run_command(adb_command(serial, "shell", "df", "-h"))
-    logging.info("开始获取存储信息...")
     return parse_storage_info(result.stdout)
