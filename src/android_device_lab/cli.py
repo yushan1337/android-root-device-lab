@@ -30,9 +30,7 @@ def export_report_by_format(
         export_markdown_report(report, markdown_file)
         logger.info("Markdown report exported to %s", markdown_file.resolve())
 
-def display_device_info(deviceinfo: bool, serial: str) -> None:
-    if deviceinfo:
-        device_info = adb.get_device_info(serial)
+def display_device_info(device_info) -> None:
         line =[f"型号: {device_info.model}",
             f"制造商: {device_info.manufacturer}",
             f"Android版本: {device_info.android_version}",
@@ -40,6 +38,22 @@ def display_device_info(deviceinfo: bool, serial: str) -> None:
             f"Build指纹: {device_info.build_fingerprint}",
             f"品牌: {device_info.brand}",
             f"安全补丁: {device_info.security_patch}"]
+        for l in line:
+            print(l)
+
+def display_storage_info(storage_info) -> None:
+        line = [f"总容量: {storage_info.total}",
+                f"已用容量: {storage_info.used}",
+                f"可用容量: {storage_info.availiable}",
+                f"使用百分比: {storage_info.use_percentage}"]
+        for l in line:
+            print(l)
+
+def display_battery_info(battery_info) -> None:
+        line = [f"温度: {int(battery_info.temperature)/10}°C",
+                f"交流电状态: {battery_info.ac_power_status}",
+                f"电压: {battery_info.voltage}mv",
+                f"电量: {battery_info.level}%"]
         for l in line:
             print(l)
 
@@ -63,19 +77,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
 
     parser.add_argument(
-        "--deviceinfo",
+        "--device-info",
         action="store_true",
         help="Display device information",
     )
 
     parser.add_argument(
-        "--batteryinfo",
+        "--battery-info",
         action="store_true",
         help="Display battery information",
     )
 
     parser.add_argument(
-        "--storageinfo",
+        "--storage-info",
         action="store_true",
         help="Display storage information",
     )
@@ -101,27 +115,21 @@ def main(argv: list[str] | None = None) -> None:
     output_root = Path(args.output)
 
     report = get_all_info(args.serial)
-    export_report_by_format(report, output_root, args.format)
-    display_device_info(args.deviceinfo, args.serial)
 
-''' if args.batteryinfo:
-        battery_info = adb.get_battery_info(args.serial)
-        line = [f"温度: {int(battery_info.temperature)/10}°C",
-                f"交流电状态: {battery_info.ac_power_status}",
-                f"电压: {battery_info.voltage}mv",
-                f"电量: {battery_info.level}%"]
-        for l in line:
-            print(l)    
+    export_report_by_format(
+        report=report,
+        output_root=output_root,
+        report_format=args.format,
+    )
 
-    if args.storage_info: 
-        storage_info = adb.get_storage_info(args.serial)
-        line = [f"总容量: {storage_info.total}",
-                f"已用容量: {storage_info.used}",
-                f"可用容量: {storage_info.availiable}",
-                f"使用百分比: {storage_info.use_percentage}"]
-        for l in line:
-            print(l)   
-'''
+    if args.deviceinfo:
+        display_device_info(report.device)
+
+    if args.batteryinfo:
+        display_battery_info(report.battery)
+
+    if args.storageinfo:
+        display_storage_info(report.storage)
 if __name__ == "__main__":
     main()
 
