@@ -16,7 +16,7 @@ class DeviceInfo:
     security_patch: str = "N/A"
 
 @dataclass
-class BetteryInfo:
+class BatteryInfo:
     temperature: str = "N/A"  
     ac_power_status: str = "N/A" 
     voltage: str = "N/A"  
@@ -32,9 +32,8 @@ class StorageInfo:
 def adb_command(serial: str, *args: str) -> list[str]:
     return ["adb", "-s", serial, *args]
 
-def list_devices(serial: str) -> CommandResult:
-    result = run_command(adb_command(serial, "devices"))
-    return result
+def list_devices() -> CommandResult:
+    return run_command(["adb", "devices"])
 
 def get_device_info(serial: str) -> DeviceInfo:
     logging.info("开始获取设备信息...")
@@ -51,7 +50,7 @@ def get_device_info(serial: str) -> DeviceInfo:
     logging.info(f"获取设备信息完成: {device_info}")
     return device_info
 
-def get_battery_info(serial: str) -> BetteryInfo:
+def get_battery_info(serial: str) -> BatteryInfo:
     logging.info("开始获取电池信息...")
     op = run_command(adb_command(serial, "shell", "dumpsys", "battery")).stdout.strip()
 
@@ -72,19 +71,30 @@ def get_battery_info(serial: str) -> BetteryInfo:
         elif key == "level":
             data["level"] = value
 
-    battery_info = BetteryInfo(**data)  # 只传收集到的字段
+    battery_info = BatteryInfo(**data)  # 只传收集到的字段
     logging.info(f"获取电池信息完成: {battery_info}")
     return battery_info
 
+def parse_storage_info(raw: str) -> StorageInfo:
+    for line in raw.strip().splitlines():
+        parts = line.split()
+
+        if len(parts) < 6:
+            continue
+
+        if parts[-1] != "/data":
+            continue
+
+        return StorageInfo(
+            total=parts[1],
+            used=parts[2],
+            availiable=parts[3],
+            use_percentage=parts[4],
+        )
+    logging.info(f"获取存储信息完成")
+    return StorageInfo()
+
 def get_storage_info(serial: str) -> StorageInfo:
+    result = run_command(adb_command(serial, "shell", "df", "-h"))
     logging.info("开始获取存储信息...")
-    result = run_command(adb_command(serial, "shell", "df", "-h","|","grep", "/data$")).stdout.strip()
-    result=result.split()
-    storage_info = StorageInfo(
-        total=result[1],
-        used=result[2],
-        availiable=result[3],
-        use_percentage=result[4]
-    )
-    logging.info(f"获取存储信息完成: {storage_info}")
-    return storage_info
+    return parse_storage_info(result.stdout)

@@ -2,29 +2,83 @@ import android_device_lab.adb as adb
 from datetime import datetime
 from android_device_lab.exporters import DiagnosticReport, export_json_report,export_markdown_report, get_all_info
 from pathlib import Path
+import argparse
+import logging
 
-def main() -> None:
-    while True:
-        print("Welcome to Android Root Device Lab CLI!")
-        print("请输入功能数字:")
-        print("1. 列出已连接的设备")
-        print("2. 获取设备信息")
-        print("3. 获取电池信息")
-        print("4. 获取存储信息")
-        print("5. 导出诊断报告为JSON文件")
-        print("6. 导出诊断报告为Markdown文件")
-        choice = input("选择功能: ")
-        try:
-            choice = int(choice)
-        except ValueError:
-            print("输入错误，请输入有效的数字.")
-            continue
+logger = logging.getLogger(__name__)
+
+def configure_logging(verbose: bool) -> None:
+    level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
+
+def export_report_by_format(
+    report,
+    output_root: Path,
+    report_format: str,
+) -> None:
+    report_dir = output_root / report.generated_at
+
+    if report_format in ("json", "both"):
+        json_file = report_dir / "report.json"
+        export_json_report(report, json_file)
+        logger.info("JSON report exported to %s", json_file.resolve())
+
+    if report_format in ("markdown", "both"):
+        markdown_file = report_dir / "report.md"
+        export_markdown_report(report, markdown_file)
+        logger.info("Markdown report exported to %s", markdown_file.resolve())
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="android-device-lab",
+        description="ADB-based Android device diagnostics toolkit",
+    )
+
+    parser.add_argument(
+        "--serial",
+        required=True,
+        help="Android device serial number",
+    )
+
+    parser.add_argument(
+        "--format",
+        choices=["json", "markdown", "both"],
+        default="both",
+        help="Report format to export",
+    )
+
+    parser.add_argument(
+        "--output",
+        default="reports",
+        help="Output directory for diagnostic reports",
+    )
+
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging",
+    )
+
+    return parser.parse_args(argv)
+
+def main(argv: list[str] | None = None) -> None:
+    args = parse_args(argv)
+    configure_logging(args.verbose)
+
+    output_root = Path(args.output)
+
+    report = get_all_info()
+
+    report_dir = output_root / report.generated_at
 
         if choice == 1:
-            print(adb.list_devices().stdout)
+            print(adb.list_devices(args.serial).stdout)
 
         elif choice == 2:
-            device_info = adb.get_device_info()
+            device_info = adb.get_device_info(args.serial)
             line =[f"型号: {device_info.model}",
                 f"制造商: {device_info.manufacturer}",
                 f"Android版本: {device_info.android_version}",

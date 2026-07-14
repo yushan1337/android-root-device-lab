@@ -1,16 +1,15 @@
 from dataclasses import dataclass
-from android_device_lab.adb import DeviceInfo, BetteryInfo, StorageInfo
+from android_device_lab.adb import DeviceInfo, BatteryInfo, StorageInfo
 from dataclasses import asdict
 from pathlib import Path
 import json
 from datetime import datetime
-from android_device_lab.adb import get_device_info, get_battery_info, get_storage_info
-
+import android_device_lab.adb
 @dataclass
 class DiagnosticReport:
     generated_at: str
     device: DeviceInfo
-    battery: BetteryInfo
+    battery: BatteryInfo
     storage: StorageInfo
 
 
@@ -26,10 +25,10 @@ def export_json_report(report: DiagnosticReport, output: Path) -> None:
             indent=2,
         )
 
-def get_all_info() -> DiagnosticReport:
-    device_info = get_device_info()
-    battery_info = get_battery_info()
-    storage_info = get_storage_info()
+def get_all_info(serial: str) -> DiagnosticReport:
+    device_info = android_device_lab.adb.get_device_info(serial)
+    battery_info = android_device_lab.adb.get_battery_info(serial)
+    storage_info = android_device_lab.adb.get_storage_info(serial)
     report = DiagnosticReport(
         generated_at=datetime.now().strftime("%Y-%m-%d_%H%M%S"),
         device=device_info,
