@@ -11,6 +11,12 @@ def configure_logging(verbose: bool) -> None:
         format="%(asctime)s [%(levelname)s] %(message)s",
     )
 
+def format_battery_temperature(raw_temperature: str) -> str:
+    try:
+        return f"{int(raw_temperature) / 10}°C"
+    except ValueError:
+        return "N/A"
+
 def export_report_by_format(
     report,
     output_root: Path,
@@ -48,16 +54,17 @@ def display_storage_info(storage_info) -> None:
             print(l)
 
 def display_battery_info(battery_info) -> None:
-        if battery_info.temperature != "N/A":
-            temperature = f"{int(battery_info.temperature) / 10}°C"
-        else:
-            temperature = "N/A"
-        line = [f"温度: {temperature}",
-                f"交流电状态: {battery_info.ac_power_status}",
-                f"电压: {battery_info.voltage}mv",
-                f"电量: {battery_info.level}%"]
-        for l in line:
-            print(l)
+    temperature = format_battery_temperature(battery_info.temperature)
+
+    line = [
+        f"温度: {temperature}",
+        f"交流电状态: {battery_info.ac_power_status}",
+        f"电压: {battery_info.voltage}mv",
+        f"电量: {battery_info.level}%",
+    ]
+
+    for l in line:
+        print(l)
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
