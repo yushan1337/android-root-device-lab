@@ -221,19 +221,19 @@ Example Markdown fields currently use raw dataclass field names:
 - manufacturer: Xiaomi
 
 ## 电池信息
-- temperature: 312
-- ac_power_status: false
-- voltage: 4210
-- level: 76
+- temperature_c: 31.2
+- ac_powered: false
+- voltage_mv: 4210
+- level_percent: 76
 
 ## 存储信息
 - total: 110G
 - used: 40G
-- availiable: 70G
-- use_percentage: 37%
+- available: 70G
+- use_percentage: 37
 ```
 
-Note: `availiable` is a known spelling mistake in the current v0.1 data model and report output.
+The diagnostic data model now uses normalized internal fields. Display units such as `°C`, `mV`, and `%` should be added by presentation code instead of being stored in JSON data.
 
 ## Current Implementation Notes
 
@@ -241,7 +241,7 @@ Note: `availiable` is a known spelling mistake in the current v0.1 data model an
 - ADB commands use argument lists instead of string concatenation.
 - Device-specific commands use `adb -s SERIAL ...`.
 - Storage parsing currently reads `adb shell df -h` and selects the row whose mount point is `/data`.
-- Battery temperature is stored as the raw Android value and converted only for terminal display.
+- Battery information is normalized in the data model: temperature uses Celsius, voltage uses millivolts, level uses an integer percentage, and AC power state uses a boolean value.
 - JSON and Markdown reports are generated from dataclass-based diagnostic data.
 - Tests focus on pure parsing, CLI argument parsing, display formatting, and report export behavior.
 
@@ -250,11 +250,9 @@ Note: `availiable` is a known spelling mistake in the current v0.1 data model an
 - `--serial` is required; automatic single-device selection is not implemented yet.
 - Multi-device batch collection is not implemented yet.
 - Device connection and ADB error handling are still basic.
-- Markdown reports currently use raw field names and raw values.
-- Battery temperature is still stored as the raw Android value and converted during display.
+- Markdown reports currently use raw field names; presentation-friendly labels and units are still planned.
 - Storage reporting currently focuses on the `/data` partition.
-- `StorageInfo.availiable` is misspelled and may be renamed to `available` in a future compatibility-breaking cleanup.
-- Battery parsing is still inside `get_battery_info()`; it has not yet been extracted into a standalone pure parser.
+- Battery and storage parsing are implemented as standalone pure parser functions.
 - JSON / Markdown report field names are not yet localized or presentation-friendly.
 - Logcat analysis, root-specific checks, GUI, and multi-device workflows are out of scope for v0.1.
 

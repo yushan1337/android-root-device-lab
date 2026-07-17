@@ -4,14 +4,14 @@ from dataclasses import dataclass
 
 @dataclass(slots=True)
 class DeviceInfo:
-    product: str = "N/A"  
-    model: str = "N/A"
-    manufacturer: str = "N/A"
-    android_version: str = "N/A"
-    sdk_version: str = "N/A"
-    build_fingerprint: str = "N/A"
-    brand: str = "N/A"
-    security_patch: str = "N/A"
+    product: str | None = None  
+    model: str | None = None
+    manufacturer: str | None = None
+    android_version: str | None = None
+    sdk_version: str | None = None
+    build_fingerprint: str | None = None
+    brand: str | None = None
+    security_patch: str | None = None
 
 @dataclass(slots=True)
 class BatteryInfo:
@@ -22,7 +22,7 @@ class BatteryInfo:
 
 @dataclass(slots=True)
 class StorageInfo:
-    total: str = "N/A"
-    used: str = "N/A"
-    available: str = "N/A"
-    use_percentage: str = "N/A"
+    total: str | None = None
+    used: str | None = None
+    available: str | None = None
+    use_percentage: str | None = None

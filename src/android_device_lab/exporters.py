@@ -4,12 +4,13 @@ from pathlib import Path
 import json
 from datetime import datetime
 import android_device_lab.adb
+from android_device_lab.models import BatteryInfo, DeviceInfo, StorageInfo
 @dataclass
 class DiagnosticReport:
     generated_at: str
-    device: android_device_lab.adb.DeviceInfo
-    battery: android_device_lab.adb.BatteryInfo
-    storage: android_device_lab.adb.StorageInfo
+    device: DeviceInfo
+    battery: BatteryInfo
+    storage: StorageInfo
 
 
 def export_json_report(report: DiagnosticReport, output: Path) -> None:

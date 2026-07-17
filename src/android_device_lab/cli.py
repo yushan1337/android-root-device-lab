@@ -58,7 +58,7 @@ def display_battery_info(battery_info) -> None:
 
     line = [
         f"温度: {temperature}",
-        f"交流电状态: {battery_info.ac_power_status}",
+        f"交流电状态: {battery_info.ac_power}",
         f"电压: {battery_info.voltage}mv",
         f"电量: {battery_info.level}%",
     ]

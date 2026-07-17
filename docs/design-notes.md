@@ -76,12 +76,13 @@ JSON 和 Markdown 均从同一个 `DiagnosticReport` 生成，避免两套数据
 ```text
 model
 android_version
-ac_power_status
-availiable
+temperature_c
+ac_powered
+available
 use_percentage
 ```
 
-这有利于 v0.1 保持实现简单，但展示效果仍比较原始。后续可以增加字段名映射层。
+这有利于当前阶段保持实现简单，但展示效果仍比较原始。后续可以增加字段名映射层，并在 Markdown / CLI 展示时补充 `°C`、`mV`、`%` 等单位。
 
 ## 测试策略
 
@@ -161,23 +162,17 @@ int(battery_info.temperature)
 
 ---
 
-### 4. `StorageInfo.availiable` 拼写错误
+### 4. `StorageInfo.available` 拼写修复
 
-当前数据模型中字段名为：
+早期实现曾将可用容量字段写成错误拼写。
 
-```python
-availiable
-```
-
-正确拼写应为：
+Week 02 Day 1 已统一修复为：
 
 ```python
 available
 ```
 
-这是 v0.1 已知问题。由于该字段已经影响 dataclass、测试、JSON 报告、Markdown 报告和文档，暂不在 v0.1 收尾阶段修改，以避免扩大变更范围。
-
-后续若修改，需要同步更新：
+该修改已同步到：
 
 - `StorageInfo`
 - `parse_storage_info()`
@@ -186,15 +181,15 @@ available
 - 测试
 - README / design notes
 
+后续如果对报告 schema 做兼容性管理，需要在 changelog 或 schema version 中说明字段名变化。
+
 ## 当前限制
 
 - 当前要求用户显式传入 `--serial`，不支持自动选择单设备。
 - 不支持多设备批量采集。
 - 设备连接状态检查仍较基础；未连接设备或设备 unauthorized 时错误提示还不够友好。
 - ADB 命令失败时，目前错误恢复和用户提示仍不完善。
-- Markdown 报告目前使用原始字段名和原始字段值，尚未做中文字段名映射和单位美化。
-- 电池温度在采集层保留原始值，展示层再转换为摄氏度。
-- 电池解析逻辑仍在 `get_battery_info()` 中，尚未拆出 `parse_battery_info(raw)` 纯函数。
+- Markdown 报告目前使用原始字段名，尚未做中文字段名映射和单位美化。
+- 电池数据已在解析层规范化，但展示层仍需要统一的格式化函数处理 `None`、单位和布尔值。
 - 存储信息目前只关注 `/data` 分区。
-- `StorageInfo.availiable` 拼写错误仍保留。
 - 不支持 logcat 分析、root 专项检测、GUI、多设备工作流或后台长期运行。
