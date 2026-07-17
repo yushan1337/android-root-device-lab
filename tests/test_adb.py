@@ -17,5 +17,5 @@ Filesystem        Size  Used Avail Use% Mounted on
 
     assert storage.total == "110G"
     assert storage.used == "40G"
-    assert storage.availiable == "70G"
+    assert storage.available == "70G"
     assert storage.use_percentage == "37%"

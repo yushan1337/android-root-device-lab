@@ -48,7 +48,7 @@ def display_device_info(device_info) -> None:
 def display_storage_info(storage_info) -> None:
         line = [f"总容量: {storage_info.total}",
                 f"已用容量: {storage_info.used}",
-                f"可用容量: {storage_info.availiable}",
+                f"可用容量: {storage_info.available}",
                 f"使用百分比: {storage_info.use_percentage}"]
         for l in line:
             print(l)
