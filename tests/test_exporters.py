@@ -8,7 +8,7 @@ def test_export_json_report_writes_expected_fields(tmp_path) -> None:
     report = DiagnosticReport(
         generated_at="2026-07-15_140000",
         device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
-        battery=BatteryInfo(level=76, temperature="312"),
+        battery=BatteryInfo(level_percent=76, temperature_c=312),
         storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage="37%"),
     )
 
@@ -30,7 +30,7 @@ def test_export_markdown_report_writes_expected_sections(tmp_path) -> None:
     report = DiagnosticReport(
         generated_at="2026-07-15_140000",
         device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
-        battery=BatteryInfo(level="76", temperature="312"),
+        battery=BatteryInfo(level_percent=76, temperature_c=312),
         storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage="37%"),
     )
 
