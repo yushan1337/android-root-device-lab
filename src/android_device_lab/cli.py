@@ -11,12 +11,6 @@ def configure_logging(verbose: bool) -> None:
         format="%(asctime)s [%(levelname)s] %(message)s",
     )
 
-def format_battery_temperature(raw_temperature: str) -> str:
-    try:
-        return f"{int(raw_temperature) / 10}°C"
-    except ValueError:
-        return "N/A"
-
 def export_report_by_format(
     report,
     output_root: Path,
@@ -35,36 +29,44 @@ def export_report_by_format(
         logger.info("Markdown report exported to %s", markdown_file.resolve())
 
 def display_device_info(device_info) -> None:
-        line =[f"型号: {device_info.model}",
-            f"制造商: {device_info.manufacturer}",
-            f"Android版本: {device_info.android_version}",
-            f"SDK版本: {device_info.sdk_version}",
-            f"Build指纹: {device_info.build_fingerprint}",
-            f"品牌: {device_info.brand}",
-            f"安全补丁: {device_info.security_patch}"]
+        line =[f"型号: {format_optional(device_info.model)}",
+            f"制造商: {format_optional(device_info.manufacturer)}",
+            f"Android版本: {format_optional(device_info.android_version)}",
+            f"SDK版本: {format_optional(device_info.sdk_version)}",
+            f"Build指纹: {format_optional(device_info.build_fingerprint)}",
+            f"品牌: {format_optional(device_info.brand)}",
+            f"安全补丁: {format_optional(device_info.security_patch)}"]
         for l in line:
             print(l)
 
 def display_storage_info(storage_info) -> None:
-        line = [f"总容量: {storage_info.total}",
-                f"已用容量: {storage_info.used}",
-                f"可用容量: {storage_info.available}",
-                f"使用百分比: {storage_info.use_percentage}"]
+        line = [f"总容量: {format_optional(storage_info.total)}",
+                f"已用容量: {format_optional(storage_info.used)}",
+                f"可用容量: {format_optional(storage_info.available)}",
+                f"使用百分比: {format_optional(storage_info.use_percentage)}"]
         for l in line:
             print(l)
 
 def display_battery_info(battery_info) -> None:
-    temperature = format_battery_temperature(battery_info.temperature)
-
-    line = [
-        f"温度: {temperature}",
-        f"交流电状态: {battery_info.ac_power}",
-        f"电压: {battery_info.voltage}mv",
-        f"电量: {battery_info.level}%",
+    lines = [
+        f"温度: {format_optional(battery_info.temperature_c, ' °C')}",
+        f"交流电状态: {format_bool(battery_info.ac_powered)}",
+        f"电压: {format_optional(battery_info.voltage_mv, ' mV')}",
+        f"电量: {format_optional(battery_info.level_percent, '%')}",
     ]
 
-    for l in line:
-        print(l)
+    for line in lines:
+        print(line)
+
+def format_bool(value: bool | None) -> str:
+    if value is None:
+        return "N/A"
+    return "是" if value else "否"
+
+def format_optional(value: object | None, suffix: str = "") -> str:
+    if value is None:
+        return "N/A"
+    return f"{value}{suffix}"
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
