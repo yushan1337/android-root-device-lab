@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 
-@dataclass
+@dataclass(slots=True)
 class DeviceInfo:
     product: str = "N/A"  
     model: str = "N/A"
@@ -13,14 +13,14 @@ class DeviceInfo:
     brand: str = "N/A"
     security_patch: str = "N/A"
 
-@dataclass
+@dataclass(slots=True)
 class BatteryInfo:
-    temperature: str = "N/A"  
-    ac_power_status: str = "N/A" 
-    voltage: str = "N/A"  
-    level: str = "N/A"  
+    temperature_c: float | None = None
+    ac_powered: bool | None = None
+    voltage_mv: int | None = None
+    level_percent: int | None = None  
 
-@dataclass
+@dataclass(slots=True)
 class StorageInfo:
     total: str = "N/A"
     used: str = "N/A"
