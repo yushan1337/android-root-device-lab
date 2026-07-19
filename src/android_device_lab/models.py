@@ -8,7 +8,7 @@ class DeviceInfo:
     model: str | None = None
     manufacturer: str | None = None
     android_version: str | None = None
-    sdk_version: str | None = None
+    sdk_version: int | None = None
     build_fingerprint: str | None = None
     brand: str | None = None
     security_patch: str | None = None
@@ -25,4 +25,4 @@ class StorageInfo:
     total: str | None = None
     used: str | None = None
     available: str | None = None
-    use_percentage: str | None = None
+    use_percentage: int | None = None

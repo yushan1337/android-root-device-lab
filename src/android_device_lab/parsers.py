@@ -2,7 +2,11 @@ from android_device_lab.models import BatteryInfo,StorageInfo
 
 
 
+def parse_percentage(value: str | None) -> int | None:
+    if value is None:
+        return None
 
+    return parse_int(value.rstrip("%"))
 
 
 def parse_int(value: str | None) -> int | None:
@@ -31,7 +35,7 @@ def parse_battery_info(raw: str) -> BatteryInfo:
         key, value = line.split(":", 1)
         key = key.strip()
         value = value.strip()
-        values[key.strip()] = value.strip()
+        values[key] = value
         
     raw_temperature = parse_int(values.get("temperature"))
     return BatteryInfo(
@@ -61,6 +65,14 @@ def parse_storage_info(raw: str) -> StorageInfo:
             total=parts[1],
             used=parts[2],
             available=parts[3],
-            use_percentage=parts[4],
+            use_percentage=parse_percentage(parts[4]),
         )
     return StorageInfo()
+
+def parse_sdk_version(raw: str | None)  -> int | None:
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError:
+        return None

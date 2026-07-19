@@ -9,7 +9,7 @@ def test_export_json_report_writes_expected_fields(tmp_path) -> None:
         generated_at="2026-07-15_140000",
         device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
         battery=BatteryInfo(level_percent=76, temperature_c=31.2),
-        storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage="37%"),
+        storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage=37),
     )
 
     output = tmp_path / "report.json"
@@ -32,7 +32,7 @@ def test_export_markdown_report_writes_expected_sections(tmp_path) -> None:
         generated_at="2026-07-15_140000",
         device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
         battery=BatteryInfo(level_percent=76, temperature_c=31.2),
-        storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage="37%"),
+        storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage=37),
     )
 
     output = tmp_path / "report.md"
