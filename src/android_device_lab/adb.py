@@ -16,7 +16,8 @@ def list_devices() -> CommandResult:
 def get_device_info(serial: str) -> DeviceInfo:
     logger.info("开始获取设备信息...")
     device_info = DeviceInfo(
-        product=run_command(adb_command(serial, "shell", "getprop", "ro.product.name")).stdout.strip(),
+        product=run_command(adb_command(serial, "shell", "getprop", "ro.product.name"),timeout=5,
+        check=True,).stdout.strip(),
         model=run_command(adb_command(serial, "shell", "getprop", "ro.product.model")).stdout.strip(),
         manufacturer=run_command(adb_command(serial, "shell", "getprop", "ro.product.manufacturer")).stdout.strip(),
         android_version=run_command(adb_command(serial, "shell", "getprop", "ro.build.version.release")).stdout.strip(),
@@ -29,11 +30,13 @@ def get_device_info(serial: str) -> DeviceInfo:
     return device_info
 
 def get_battery_info(serial: str) -> BatteryInfo:
-    result = run_command(adb_command(serial, "shell", "dumpsys", "battery"))
+    result = run_command(adb_command(serial, "shell", "dumpsys", "battery"),timeout=5,
+    check=True,)
     logger.info(f"获取电池信息完成: ")
     return parse_battery_info(result.stdout)
 
 
 def get_storage_info(serial: str) -> StorageInfo:
-    result = run_command(adb_command(serial, "shell", "df", "-h"))
+    result = run_command(adb_command(serial, "shell", "df", "-h"),timeout=5,
+    check=True,)
     return parse_storage_info(result.stdout)
