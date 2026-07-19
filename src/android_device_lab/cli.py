@@ -144,7 +144,11 @@ def main(argv: list[str] | None = None) -> None:
         )
     except AndroidDeviceLabError as error:
         logger.error("Error: %s", error)
-        raise SystemExit(1) from error if args.verbose else SystemExit(1)
+
+        if args.verbose:
+            raise
+
+        raise SystemExit(1)
     if args.device_info:
         display_device_info(report.device)
 
