@@ -18,25 +18,25 @@ def get_device_info(serial: str) -> DeviceInfo:
     device_info = DeviceInfo(
         product=run_command(adb_command(serial, "shell", "getprop", "ro.product.name"),timeout=5,
         check=True,).stdout.strip(),
-        model=run_command(adb_command(serial, "shell", "getprop", "ro.product.model")).stdout.strip(),
-        manufacturer=run_command(adb_command(serial, "shell", "getprop", "ro.product.manufacturer")).stdout.strip(),
-        android_version=run_command(adb_command(serial, "shell", "getprop", "ro.build.version.release")).stdout.strip(),
-        sdk_version=parse_sdk_version(run_command(adb_command(serial, "shell", "getprop", "ro.build.version.sdk")).stdout.strip()),
-        build_fingerprint=run_command(adb_command(serial, "shell", "getprop", "ro.build.fingerprint")).stdout.strip(),
-        brand=run_command(adb_command(serial, "shell", "getprop", "ro.product.brand")).stdout.strip(),
-        security_patch=run_command(adb_command(serial, "shell", "getprop", "ro.build.version.security_patch")).stdout.strip(),
+        model=run_command(adb_command(serial, "shell", "getprop", "ro.product.model"),timeout=5, check=True).stdout.strip(),
+        manufacturer=run_command(adb_command(serial, "shell", "getprop", "ro.product.manufacturer"),timeout=5, check=True).stdout.strip(),
+        android_version=run_command(adb_command(serial, "shell", "getprop", "ro.build.version.release"),timeout=5, check=True).stdout.strip(),
+        sdk_version=parse_sdk_version(run_command(adb_command(serial, "shell", "getprop", "ro.build.version.sdk"),timeout=5, check=True).stdout.strip()),
+        build_fingerprint=run_command(adb_command(serial, "shell", "getprop", "ro.build.fingerprint"),timeout=5, check=True).stdout.strip(),
+        brand=run_command(adb_command(serial, "shell", "getprop", "ro.product.brand"),timeout=5, check=True).stdout.strip(),
+        security_patch=run_command(adb_command(serial, "shell", "getprop", "ro.build.version.security_patch"),timeout=5, check=True).stdout.strip(),
     )
     logger.info(f"获取设备信息完成: {device_info}")
     return device_info
 
 def get_battery_info(serial: str) -> BatteryInfo:
-    result = run_command(adb_command(serial, "shell", "dumpsys", "battery"),timeout=5,
+    result = run_command(adb_command(serial, "shell", "dumpsys", "battery"),timeout=10,
     check=True,)
     logger.info(f"获取电池信息完成: ")
     return parse_battery_info(result.stdout)
 
 
 def get_storage_info(serial: str) -> StorageInfo:
-    result = run_command(adb_command(serial, "shell", "df", "-h"),timeout=5,
+    result = run_command(adb_command(serial, "shell", "df", "-h"),timeout=10,
     check=True,)
     return parse_storage_info(result.stdout)

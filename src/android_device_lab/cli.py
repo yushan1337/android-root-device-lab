@@ -2,7 +2,9 @@ from android_device_lab.exporters import export_json_report,export_markdown_repo
 from pathlib import Path
 import argparse
 import logging
+from android_device_lab.exceptions import AndroidDeviceLabError
 logger = logging.getLogger(__name__)
+
 
 def configure_logging(verbose: bool) -> None:
     level = logging.DEBUG if verbose else logging.INFO
@@ -10,6 +12,7 @@ def configure_logging(verbose: bool) -> None:
         level=level,
         format="%(asctime)s [%(levelname)s] %(message)s",
     )
+
 
 def export_report_by_format(
     report,
@@ -28,6 +31,7 @@ def export_report_by_format(
         export_markdown_report(report, markdown_file)
         logger.info("Markdown report exported to %s", markdown_file.resolve())
 
+
 def display_device_info(device_info) -> None:
         line =[f"型号: {format_optional(device_info.model)}",
             f"制造商: {format_optional(device_info.manufacturer)}",
@@ -39,6 +43,7 @@ def display_device_info(device_info) -> None:
         for l in line:
             print(l)
 
+
 def display_storage_info(storage_info) -> None:
         line = [f"总容量: {format_optional(storage_info.total)}",
                 f"已用容量: {format_optional(storage_info.used)}",
@@ -46,6 +51,7 @@ def display_storage_info(storage_info) -> None:
                 f"使用百分比: {format_optional(storage_info.use_percentage)}"]
         for l in line:
             print(l)
+
 
 def display_battery_info(battery_info) -> None:
     lines = [
@@ -58,15 +64,18 @@ def display_battery_info(battery_info) -> None:
     for line in lines:
         print(line)
 
+
 def format_bool(value: bool | None) -> str:
     if value is None:
         return "N/A"
     return "是" if value else "否"
 
+
 def format_optional(value: object | None, suffix: str = "") -> str:
     if value is None:
         return "N/A"
     return f"{value}{suffix}"
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -119,20 +128,23 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     return parser.parse_args(argv)
 
+
 def main(argv: list[str] | None = None) -> None:
     args = parse_args(argv)
     configure_logging(args.verbose)
 
     output_root = Path(args.output)
+    try:
+        report = get_all_info(args.serial)
 
-    report = get_all_info(args.serial)
-
-    export_report_by_format(
-        report=report,
-        output_root=output_root,
-        report_format=args.format,
-    )
-
+        export_report_by_format(
+            report=report,
+            output_root=output_root,
+            report_format=args.format,
+        )
+    except AndroidDeviceLabError as error:
+        logger.error("Error: %s", error)
+        raise SystemExit(1) from error if args.verbose else SystemExit(1)
     if args.device_info:
         display_device_info(report.device)
 
