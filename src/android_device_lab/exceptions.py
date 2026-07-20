@@ -34,3 +34,7 @@ class CommandTimeoutError(AndroidDeviceLabError):
         super().__init__(
             f"Command timed out after {timeout} seconds: {' '.join(args)}"
         )
+
+
+class AdbDeviceError(AndroidDeviceLabError):
+    pass

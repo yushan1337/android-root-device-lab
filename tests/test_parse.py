@@ -1,6 +1,6 @@
 
-from android_device_lab.parsers import parse_battery_info, parse_storage_info,parse_sdk_version
-
+from android_device_lab.parsers import parse_battery_info, parse_storage_info, parse_sdk_version, parse_devices_output
+from android_device_lab.models import DeviceState
 
 def test_parse_battery_info_empty_output_returns_empty_model() -> None:
     battery = parse_battery_info("")
@@ -158,3 +158,73 @@ def test_parse_devices_output_without_devices() -> None:
     devices = parse_devices_output(raw)
 
     assert devices == []
+
+
+def test_parse_devices_output_single_device_with_details() -> None:
+    raw = """
+List of devices attached
+ABC123    device product:socrates model:22127RK46C transport_id:1
+"""
+
+    devices = parse_devices_output(raw)
+
+    assert len(devices) == 1
+    assert devices[0].serial == "ABC123"
+    assert devices[0].state == DeviceState.DEVICE
+    assert devices[0].product == "socrates"
+    assert devices[0].model == "22127RK46C"
+    assert devices[0].transport_id == "1"
+
+
+def test_parse_devices_output_unauthorized_device() -> None:
+    raw = """
+List of devices attached
+ABC123    unauthorized
+"""
+
+    devices = parse_devices_output(raw)
+
+    assert len(devices) == 1
+    assert devices[0].serial == "ABC123"
+    assert devices[0].state == DeviceState.UNAUTHORIZED
+
+
+def test_parse_devices_output_unknown_state() -> None:
+    raw = """
+List of devices attached
+ABC123    recovery
+"""
+
+    devices = parse_devices_output(raw)
+
+    assert len(devices) == 1
+    assert devices[0].state == DeviceState.UNKNOWN
+
+
+def test_parse_devices_output_offline_device() -> None:
+    raw = """
+List of devices attached
+ABC123    offline
+"""
+
+    devices = parse_devices_output(raw)
+
+    assert len(devices) == 1
+    assert devices[0].serial == "ABC123"
+    assert devices[0].state == DeviceState.OFFLINE
+
+
+def test_parse_devices_output_single_device_without_details() -> None:
+    raw = """
+List of devices attached
+ABC123    device
+"""
+
+    devices = parse_devices_output(raw)
+
+    assert len(devices) == 1
+    assert devices[0].serial == "ABC123"
+    assert devices[0].state == DeviceState.DEVICE
+    assert devices[0].product is None
+    assert devices[0].model is None
+    assert devices[0].transport_id is None

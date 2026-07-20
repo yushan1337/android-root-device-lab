@@ -15,3 +15,9 @@ def test_parse_args_json_verbose() -> None:
     assert args.format == "json"
     assert args.output == "reports"
     assert args.verbose is True
+
+
+def test_parse_args_serial_is_optional() -> None:
+    args = parse_args([])
+
+    assert args.serial is None

@@ -1,17 +1,16 @@
 # src/android_device_lab/adb.py
 # adb.py
 import logging
-from android_device_lab.command import CommandResult, run_command
-from android_device_lab.models import DeviceInfo, BatteryInfo, StorageInfo
-from android_device_lab.parsers import parse_battery_info,parse_storage_info,parse_sdk_version
+from android_device_lab.command import run_command,CommandResult
+from android_device_lab.models import DeviceInfo, BatteryInfo, DeviceState, StorageInfo, ConnectedDevice
+from android_device_lab.parsers import parse_battery_info,parse_storage_info,parse_sdk_version,parse_devices_output
+from android_device_lab.exceptions import AdbDeviceError
 
 logger = logging.getLogger(__name__)
 
 def adb_command(serial: str, *args: str) -> list[str]:
     return ["adb", "-s", serial, *args]
 
-def list_devices() -> CommandResult:
-    return run_command(["adb", "devices"])
 
 def get_device_info(serial: str) -> DeviceInfo:
     logger.info("开始获取设备信息...")
@@ -40,3 +39,35 @@ def get_storage_info(serial: str) -> StorageInfo:
     result = run_command(adb_command(serial, "shell", "df", "-h"),timeout=10,
     check=True,)
     return parse_storage_info(result.stdout)
+
+
+def select_device(
+    devices: list[ConnectedDevice],
+    requested_serial: str | None,
+    ) -> ConnectedDevice:
+    if requested_serial is not None:
+        for device in devices:
+            if device.serial == requested_serial and device.state == DeviceState.DEVICE:
+                return device
+    if requested_serial is None:
+        available_devices = [
+        device for device in devices
+        if device.state == DeviceState.DEVICE
+        ]
+        if len(available_devices) == 1:
+            return available_devices[0]
+        if len(available_devices) == 0:
+            raise AdbDeviceError("No available devices")
+    raise AdbDeviceError("Device not found")
+
+
+def list_devices() -> CommandResult:
+    return run_command(["adb","devices","-l"], timeout=5, check=True)
+
+
+def resolve_device_serial(requested_serial: str | None) -> str:
+    result = list_devices()
+    devices = parse_devices_output(result.stdout)
+    selected = select_device(devices, requested_serial)
+    return selected.serial
+    

@@ -77,41 +77,55 @@ def parse_sdk_version(raw: str | None)  -> int | None:
         return None
 
 
-def parse_device_output(raw: str) -> list[ConnectedDevice]:
-    devices = []
-    for line in raw.strip().splitlines():
-        index = line.split()
-        
-        if len(index)<2:
+def parse_devices_output(raw: str) -> list[ConnectedDevice]:
+    
+    devices: list[ConnectedDevice] = []
+
+    for line in raw.splitlines():
+        line = line.strip()
+
+        if not line:
             continue
-        serial = index[0]
-        raw_state = index[1]
-        product = index[3]
-        model = index[4]
-        transport_id = index[6]
+
+        if line == "List of devices attached":
+            continue
+
+        parts = line.split()
+
+        if len(parts) < 2:
+            continue
+        serial = parts[0]
+        raw_state = parts[1]
         if raw_state not in {
         "device",
         "offline",
         "unauthorized"
         }:
-            continue
-
-        try:
-            state = DeviceState(raw_state)
-        except ValueError:
             state = DeviceState.UNKNOWN
+        else:
+            state = parse_device_state(raw_state)
+        details: dict[str, str] = {}
+        for item in parts[2:]:
+            if ":" not in item:
+                continue
 
+            key, value = item.split(":", 1)
+            details[key] = value
         devices.append(
             ConnectedDevice(
                 serial=serial,
                 state=state,
-
+                product=details.get("product"),
+                model=details.get("model"),
+                transport_id=details.get("transport_id"),
             )
         )
+    return devices
 
 
-def parse_device_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
-
-
-
+def parse_device_state(raw: str) -> DeviceState:
+    try:
+        return DeviceState(raw)
+    except ValueError:
+        return DeviceState.UNKNOWN
 

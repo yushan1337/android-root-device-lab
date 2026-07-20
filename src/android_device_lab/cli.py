@@ -1,4 +1,5 @@
 from android_device_lab.exporters import export_json_report,export_markdown_report, get_all_info
+from android_device_lab.adb import resolve_device_serial
 from pathlib import Path
 import argparse
 import logging
@@ -85,7 +86,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     parser.add_argument(
         "--serial",
-        required=True,
         help="Android device serial number",
     )
 
@@ -135,8 +135,8 @@ def main(argv: list[str] | None = None) -> None:
 
     output_root = Path(args.output)
     try:
-        report = get_all_info(args.serial)
-
+        serial = resolve_device_serial(args.serial)
+        report = get_all_info(serial)
         export_report_by_format(
             report=report,
             output_root=output_root,
