@@ -238,8 +238,9 @@ The diagnostic data model now uses normalized internal fields. Display units suc
 ## Current Implementation Notes
 
 - Commands are executed through `subprocess.run()` without `shell=True`.
+- Command execution preserves `stdout` / `stderr`, supports timeout, and can raise explicit project errors for non-zero exits, missing executables, and timeouts.
 - ADB commands use argument lists instead of string concatenation.
-- Device-specific commands use `adb -s SERIAL ...`.
+- Device-specific commands use `adb -s SERIAL ...` with explicit timeout and failure checks on the main report collection path.
 - Storage parsing currently reads `adb shell df -h` and selects the row whose mount point is `/data`.
 - Battery information is normalized in the data model: temperature uses Celsius, voltage uses millivolts, level uses an integer percentage, and AC power state uses a boolean value.
 - JSON and Markdown reports are generated from dataclass-based diagnostic data.
@@ -249,7 +250,7 @@ The diagnostic data model now uses normalized internal fields. Display units suc
 
 - `--serial` is required; automatic single-device selection is not implemented yet.
 - Multi-device batch collection is not implemented yet.
-- Device connection and ADB error handling are still basic.
+- Device state handling such as `unauthorized`, `offline`, invalid serial, and automatic device selection is still planned for the device discovery milestone.
 - Markdown reports currently use raw field names; presentation-friendly labels and units are still planned.
 - Storage reporting currently focuses on the `/data` partition.
 - Battery and storage parsing are implemented as standalone pure parser functions.

@@ -150,3 +150,11 @@ def test_parse_sdk_version_invalid_value_returns_none() -> None:
     assert parse_sdk_version("") is None
     assert parse_sdk_version("abc") is None
     assert parse_sdk_version(None) is None
+
+
+def test_parse_devices_output_without_devices() -> None:
+    raw = "List of devices attached\n\n"
+
+    devices = parse_devices_output(raw)
+
+    assert devices == []
