@@ -1,5 +1,4 @@
-from android_device_lab.models import BatteryInfo,StorageInfo
-
+from android_device_lab.models import BatteryInfo, StorageInfo, DeviceState, ConnectedDevice
 
 
 def parse_percentage(value: str | None) -> int | None:
@@ -50,7 +49,6 @@ def parse_battery_info(raw: str) -> BatteryInfo:
         )
 
 
-
 def parse_storage_info(raw: str) -> StorageInfo:
     for line in raw.strip().splitlines():
         parts = line.split()
@@ -69,6 +67,7 @@ def parse_storage_info(raw: str) -> StorageInfo:
         )
     return StorageInfo()
 
+
 def parse_sdk_version(raw: str | None)  -> int | None:
     if raw is None:
         return None
@@ -76,3 +75,43 @@ def parse_sdk_version(raw: str | None)  -> int | None:
         return int(raw)
     except ValueError:
         return None
+
+
+def parse_device_output(raw: str) -> list[ConnectedDevice]:
+    devices = []
+    for line in raw.strip().splitlines():
+        index = line.split()
+        
+        if len(index)<2:
+            continue
+        serial = index[0]
+        raw_state = index[1]
+        product = index[3]
+        model = index[4]
+        transport_id = index[6]
+        if raw_state not in {
+        "device",
+        "offline",
+        "unauthorized"
+        }:
+            continue
+
+        try:
+            state = DeviceState(raw_state)
+        except ValueError:
+            state = DeviceState.UNKNOWN
+
+        devices.append(
+            ConnectedDevice(
+                serial=serial,
+                state=state,
+
+            )
+        )
+
+
+def parse_device_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+
+
+
+
