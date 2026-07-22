@@ -18,14 +18,14 @@
 - 所有设备基础字段通过 `adb shell getprop <属性名>` 获取。
 - `security_patch` 在不同 ROM 上路径可能不同，备选：`ro.vendor.build.security_patch`。
 - `getprop` 返回值为空时不报错，当前 v0.1 调用方仍需要自行处理空值。
-- 当前 CLI 要求显式传入 `--serial`，所有设备相关命令都通过 `adb -s SERIAL ...` 执行。
+- 当前 CLI 支持在只有一个可用设备时自动选择 serial；多设备时仍要求显式传入 `--serial`。所有设备相关采集命令都通过 `adb -s SERIAL ...` 执行。
 
 ## 实现位置
 
-- 数据模型：`adb.py` — `DeviceInfo`, `BatteryInfo`, `StorageInfo`
-- 采集函数：`adb.py` — `get_device_info()`, `get_battery_info()`, `get_storage_info()`
-- 解析函数：`adb.py` — `parse_storage_info()`
-- 命令封装：`command.py` — `run_command()`
+- 数据模型：`models.py` — `DeviceInfo`, `BatteryInfo`, `StorageInfo`, `ConnectedDevice`, `DeviceState`
+- 采集函数：`adb.py` — `get_device_info()`, `get_battery_info()`, `get_storage_info()`, `list_devices()`, `resolve_device_serial()`
+- 解析函数：`parsers.py` — `parse_battery_info()`, `parse_storage_info()`, `parse_devices_output()`
+- 命令封装：`command.py` — `run_command()`, `CommandResult`
 - 报告导出：`exporters.py` — `export_json_report()`, `export_markdown_report()`
 - CLI 入口：`cli.py` — `parse_args()`, `main()`
 
@@ -36,7 +36,7 @@ v0.1 已从早期菜单式交互改为 argparse 参数式 CLI。
 当前支持：
 
 ```text
---serial SERIAL
+--serial SERIAL  # 可选；多设备时需要
 --format json|markdown|both
 --output OUTPUT
 --device-info
@@ -47,7 +47,7 @@ v0.1 已从早期菜单式交互改为 argparse 参数式 CLI。
 
 设计取舍：
 
-- `--serial` 当前必填，避免多设备连接时隐式选错设备。
+- `--serial` 当前可选；如果恰好一个状态为 `device` 的设备在线，则自动选择；如果多个可用设备在线，则要求用户显式指定。
 - `--format` 默认 `both`，方便一次运行同时生成机器可读 JSON 和人类可读 Markdown。
 - `--output` 默认 `reports`，并在其下创建时间戳目录。
 - `--device-info`、`--battery-info`、`--storage-info` 只控制终端显示，不影响报告采集和导出。
@@ -185,11 +185,10 @@ available
 
 ## 当前限制
 
-- 当前要求用户显式传入 `--serial`，不支持自动选择单设备。
 - 不支持多设备批量采集。
 - 命令执行层已建立显式错误模型，包括非零退出码、命令不存在、超时和 `stderr` 保留。
 - CLI 普通模式会捕获项目异常并给出错误信息；`--verbose` 模式保留 traceback 以便调试。
-- 设备状态层面的 `unauthorized`、`offline`、无设备、多设备和无效 serial 处理仍留给 Day 4。
+- 设备发现层已支持基础状态解析和自动选择；`unauthorized`、`offline` 等恢复建议仍可继续细化。
 - Markdown 报告目前使用原始字段名，尚未做中文字段名映射和单位美化。
 - 电池数据已在解析层规范化，但展示层仍需要统一的格式化函数处理 `None`、单位和布尔值。
 - 存储信息目前只关注 `/data` 分区。

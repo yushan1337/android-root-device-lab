@@ -5,6 +5,7 @@ import argparse
 import logging
 from android_device_lab.exceptions import AndroidDeviceLabError
 logger = logging.getLogger(__name__)
+from android_device_lab.presentation import format_report_value
 
 
 def configure_logging(verbose: bool) -> None:
@@ -34,48 +35,42 @@ def export_report_by_format(
 
 
 def display_device_info(device_info) -> None:
-        line =[f"型号: {format_optional(device_info.model)}",
-            f"制造商: {format_optional(device_info.manufacturer)}",
-            f"Android版本: {format_optional(device_info.android_version)}",
-            f"SDK版本: {format_optional(device_info.sdk_version)}",
-            f"Build指纹: {format_optional(device_info.build_fingerprint)}",
-            f"品牌: {format_optional(device_info.brand)}",
-            f"安全补丁: {format_optional(device_info.security_patch)}"]
-        for l in line:
-            print(l)
-
-
-def display_storage_info(storage_info) -> None:
-        line = [f"总容量: {format_optional(storage_info.total)}",
-                f"已用容量: {format_optional(storage_info.used)}",
-                f"可用容量: {format_optional(storage_info.available)}",
-                f"使用百分比: {format_optional(storage_info.use_percentage)}"]
-        for l in line:
-            print(l)
-
-
-def display_battery_info(battery_info) -> None:
     lines = [
-        f"温度: {format_optional(battery_info.temperature_c, ' °C')}",
-        f"交流电状态: {format_bool(battery_info.ac_powered)}",
-        f"电压: {format_optional(battery_info.voltage_mv, ' mV')}",
-        f"电量: {format_optional(battery_info.level_percent, '%')}",
+        f"型号: {format_report_value('device', 'model', device_info.model)}",
+        f"制造商: {format_report_value('device', 'manufacturer', device_info.manufacturer)}",
+        f"Android版本: {format_report_value('device', 'android_version', device_info.android_version)}",
+        f"SDK版本: {format_report_value('device', 'sdk_version', device_info.sdk_version)}",
+        f"Build指纹: {format_report_value('device', 'build_fingerprint', device_info.build_fingerprint)}",
+        f"品牌: {format_report_value('device', 'brand', device_info.brand)}",
+        f"安全补丁: {format_report_value('device', 'security_patch', device_info.security_patch)}",
     ]
 
     for line in lines:
         print(line)
 
 
-def format_bool(value: bool | None) -> str:
-    if value is None:
-        return "N/A"
-    return "是" if value else "否"
+def display_storage_info(storage_info) -> None:
+    lines = [
+        f"总容量: {format_report_value('storage', 'total', storage_info.total)}",
+        f"已用容量: {format_report_value('storage', 'used', storage_info.used)}",
+        f"可用容量: {format_report_value('storage', 'available', storage_info.available)}",
+        f"使用率: {format_report_value('storage', 'use_percentage', storage_info.use_percentage)}",
+    ]
+
+    for line in lines:
+        print(line)
 
 
-def format_optional(value: object | None, suffix: str = "") -> str:
-    if value is None:
-        return "N/A"
-    return f"{value}{suffix}"
+def display_battery_info(battery_info) -> None:
+    lines = [
+        f"温度: {format_report_value('battery', 'temperature_c', battery_info.temperature_c)}",
+        f"交流电状态: {format_report_value('battery', 'ac_powered', battery_info.ac_powered)}",
+        f"电压: {format_report_value('battery', 'voltage_mv', battery_info.voltage_mv)}",
+        f"电量: {format_report_value('battery', 'level_percent', battery_info.level_percent)}",
+    ]
+
+    for line in lines:
+        print(line)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

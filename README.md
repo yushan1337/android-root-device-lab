@@ -58,22 +58,22 @@ android-root-device-lab/
 - Python 3.11 or newer
 - ADB installed and available in `PATH`
 - Android device with USB debugging enabled
-- A known device serial number
+- Android device connected with USB debugging enabled
 
 Check connected devices:
 
 ```bash
-adb devices
+adb devices -l
 ```
 
 Example output:
 
 ```text
 List of devices attached
-SERIAL_NUMBER    device
+SERIAL_NUMBER    device product:... model:... transport_id:1
 ```
 
-Use the `SERIAL_NUMBER` value with `--serial`.
+If exactly one usable device is connected, the CLI can select it automatically. Use `--serial SERIAL_NUMBER` when multiple usable devices are connected or when you want to target a specific device.
 
 ## Development Setup
 
@@ -119,7 +119,13 @@ Show help:
 PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli --help
 ```
 
-The CLI requires `--serial`:
+The CLI can auto-select a single usable device:
+
+```bash
+PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli
+```
+
+When multiple usable devices are connected, specify `--serial`:
 
 ```bash
 PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli --serial SERIAL_NUMBER
@@ -130,7 +136,7 @@ By default, this exports both JSON and Markdown reports.
 ## CLI Options
 
 ```text
---serial SERIAL       Android device serial number. Required.
+--serial SERIAL       Optional Android device serial number. Required only when multiple usable devices are connected.
 --format FORMAT       Report format: json, markdown, or both. Default: both.
 --output OUTPUT       Output directory for diagnostic reports. Default: reports.
 --device-info         Also print device information to the terminal.
@@ -240,6 +246,7 @@ The diagnostic data model now uses normalized internal fields. Display units suc
 - Commands are executed through `subprocess.run()` without `shell=True`.
 - Command execution preserves `stdout` / `stderr`, supports timeout, and can raise explicit project errors for non-zero exits, missing executables, and timeouts.
 - ADB commands use argument lists instead of string concatenation.
+- Device discovery uses `adb devices -l`; a single usable device can be selected automatically, while multiple usable devices require `--serial`.
 - Device-specific commands use `adb -s SERIAL ...` with explicit timeout and failure checks on the main report collection path.
 - Storage parsing currently reads `adb shell df -h` and selects the row whose mount point is `/data`.
 - Battery information is normalized in the data model: temperature uses Celsius, voltage uses millivolts, level uses an integer percentage, and AC power state uses a boolean value.
@@ -248,9 +255,8 @@ The diagnostic data model now uses normalized internal fields. Display units suc
 
 ## Current Limitations
 
-- `--serial` is required; automatic single-device selection is not implemented yet.
 - Multi-device batch collection is not implemented yet.
-- Device state handling such as `unauthorized`, `offline`, invalid serial, and automatic device selection is still planned for the device discovery milestone.
+- Device discovery handles basic `device`, `unauthorized`, `offline`, unknown state, missing serial, and multiple-device selection cases; richer recovery guidance can still be improved.
 - Markdown reports currently use raw field names; presentation-friendly labels and units are still planned.
 - Storage reporting currently focuses on the `/data` partition.
 - Battery and storage parsing are implemented as standalone pure parser functions.
@@ -265,13 +271,13 @@ Show CLI help:
 PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli --help
 ```
 
-Check required `--serial` validation:
+Check automatic single-device selection:
 
 ```bash
 PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli --format both
 ```
 
-Expected result: argparse reports that `--serial` is required.
+Expected result: the CLI selects the only usable connected device, or reports a clear device-selection error when there are no usable devices or multiple usable devices.
 
 Run tests:
 
