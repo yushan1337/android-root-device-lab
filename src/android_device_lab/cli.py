@@ -1,7 +1,7 @@
 import argparse
 import logging
 from pathlib import Path
-
+from android_device_lab.logcat import stream_logcat
 from android_device_lab.adb import resolve_device_serial
 from android_device_lab.exceptions import AndroidDeviceLabError
 from android_device_lab.exporters import (
@@ -126,6 +126,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Enable verbose logging",
     )
+    parser.add_argument(
+    "--logcat",
+    action="store_true",
+    help="Stream logcat output in real time",
+    )
+
+    parser.add_argument(
+    "--logcat-level",
+    help="Minimum logcat level to display: V, D, I, W, E, F, or S",
+    )
+
+    parser.add_argument(
+    "--logcat-tag",
+    help="Only display logcat messages from this tag",
+    )
 
     return parser.parse_args(argv)
 
@@ -137,6 +152,14 @@ def main(argv: list[str] | None = None) -> None:
     output_root = Path(args.output)
     try:
         serial = resolve_device_serial(args.serial)
+        if args.logcat:
+            stream_logcat(
+            serial=serial,
+            level=args.logcat_level,
+            tag=args.logcat_tag,
+            )
+            return
+
         report = get_all_info(serial)
         export_report_by_format(
             report=report,

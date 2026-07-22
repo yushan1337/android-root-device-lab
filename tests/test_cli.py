@@ -21,3 +21,23 @@ def test_parse_args_serial_is_optional() -> None:
     args = parse_args([])
 
     assert args.serial is None
+
+
+def test_parse_args_logcat_options() -> None:
+    args = parse_args([
+        "--logcat",
+        "--logcat-level",
+        "E",
+        "--logcat-tag",
+        "ActivityManager",
+    ])
+
+    assert args.logcat is True
+    assert args.logcat_level == "E"
+    assert args.logcat_tag == "ActivityManager"
+
+
+def test_parse_args_logcat_level_accepts_lowercase() -> None:
+    args = parse_args(["--logcat", "--logcat-level", "e"])
+
+    assert args.logcat_level == "e"

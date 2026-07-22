@@ -38,3 +38,7 @@ class CommandTimeoutError(AndroidDeviceLabError):
 
 class AdbDeviceError(AndroidDeviceLabError):
     pass
+
+
+class LogcatStreamError(AndroidDeviceLabError):
+    pass
