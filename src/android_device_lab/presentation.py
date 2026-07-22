@@ -1,9 +1,3 @@
-
-
-
-
-
-
 DEVICE_FIELD_LABELS = {
     "product": "产品",
     "model": "型号",

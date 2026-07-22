@@ -1,11 +1,17 @@
-from android_device_lab.exporters import export_json_report,export_markdown_report, get_all_info
-from android_device_lab.adb import resolve_device_serial
-from pathlib import Path
 import argparse
 import logging
+from pathlib import Path
+
+from android_device_lab.adb import resolve_device_serial
 from android_device_lab.exceptions import AndroidDeviceLabError
-logger = logging.getLogger(__name__)
+from android_device_lab.exporters import (
+    export_json_report,
+    export_markdown_report,
+    get_all_info,
+)
 from android_device_lab.presentation import format_report_value
+
+logger = logging.getLogger(__name__)
 
 
 def configure_logging(verbose: bool) -> None:
@@ -144,6 +150,7 @@ def main(argv: list[str] | None = None) -> None:
             raise
 
         raise SystemExit(1)
+
     if args.device_info:
         display_device_info(report.device)
 
@@ -152,6 +159,7 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.storage_info:
         display_storage_info(report.storage)
+
+
 if __name__ == "__main__":
     main()
-

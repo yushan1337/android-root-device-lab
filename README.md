@@ -42,10 +42,13 @@ The Python prototype is not intended to be the final desktop product. It is the 
 android-root-device-lab/
 ├── src/
 │   └── android_device_lab/
-│       ├── cli.py        # CLI entry point
-│       ├── adb.py        # ADB data collection and parsers
-│       ├── command.py    # Safe command execution wrapper
-│       └── exporters.py  # JSON / Markdown report export
+│       ├── cli.py            # CLI entry point
+│       ├── adb.py            # ADB data collection functions
+│       ├── command.py        # Safe command execution wrapper
+│       ├── exporters.py      # JSON / Markdown report export
+│       ├── models.py         # Structured diagnostic data models
+│       ├── parsers.py        # Pure parsers for ADB command output
+│       └── presentation.py   # Human-readable labels and display formatting
 ├── tests/                # pytest tests
 ├── reports/              # Generated diagnostic reports, ignored by Git
 ├── samples/              # Sample outputs
@@ -214,32 +217,47 @@ reports/
 
 Current report sections:
 
+- Report metadata (`schema_version`, generated time, device serial, warnings)
 - Device information
 - Battery information
 - Storage information
 
-Example Markdown fields currently use raw dataclass field names:
+JSON reports keep normalized machine-readable data. Numeric and boolean fields stay typed, missing values are exported as `null`, and display units are not stored in JSON.
 
-```markdown
-## 设备信息
-- product: socrates
-- model: 22127RK46C
-- manufacturer: Xiaomi
+Example JSON fields:
 
-## 电池信息
-- temperature_c: 31.2
-- ac_powered: false
-- voltage_mv: 4210
-- level_percent: 76
-
-## 存储信息
-- total: 110G
-- used: 40G
-- available: 70G
-- use_percentage: 37
+```json
+{
+  "schema_version": "1.0",
+  "device_serial": "SERIAL_NUMBER",
+  "battery": {
+    "temperature_c": 31.2,
+    "ac_powered": false,
+    "voltage_mv": 4210,
+    "level_percent": 76
+  },
+  "storage": {
+    "available": "70G",
+    "use_percentage": 37
+  },
+  "warnings": []
+}
 ```
 
-The diagnostic data model now uses normalized internal fields. Display units such as `°C`, `mV`, and `%` should be added by presentation code instead of being stored in JSON data.
+Markdown reports use human-readable labels and presentation formatting:
+
+```markdown
+## 电池信息
+
+| 字段 | 值 |
+|---|---|
+| 温度 | 31.2 °C |
+| 交流电供电 | 否 |
+| 电压 | 4210 mV |
+| 电量 | 76% |
+```
+
+The diagnostic data model uses normalized internal fields. Display units such as `°C`, `mV`, and `%` are added by presentation code instead of being stored in JSON data. Terminal display and Markdown export reuse the same presentation formatting rules.
 
 ## Current Implementation Notes
 
@@ -251,13 +269,14 @@ The diagnostic data model now uses normalized internal fields. Display units suc
 - Storage parsing currently reads `adb shell df -h` and selects the row whose mount point is `/data`.
 - Battery information is normalized in the data model: temperature uses Celsius, voltage uses millivolts, level uses an integer percentage, and AC power state uses a boolean value.
 - JSON and Markdown reports are generated from dataclass-based diagnostic data.
-- Tests focus on pure parsing, CLI argument parsing, display formatting, and report export behavior.
+- Reports include schema version, device serial, and non-fatal warnings for missing optional fields.
+- Presentation formatting is centralized in `presentation.py` so Markdown and terminal output share labels, units, boolean formatting, and `N/A` handling.
+- Tests focus on pure parsing, CLI argument parsing, display formatting, warning generation, and report export behavior.
 
 ## Current Limitations
 
 - Multi-device batch collection is not implemented yet.
 - Device discovery handles basic `device`, `unauthorized`, `offline`, unknown state, missing serial, and multiple-device selection cases; richer recovery guidance can still be improved.
-- Markdown reports currently use raw field names; presentation-friendly labels and units are still planned.
 - Storage reporting currently focuses on the `/data` partition.
 - Battery and storage parsing are implemented as standalone pure parser functions.
 - JSON / Markdown report field names are not yet localized or presentation-friendly.

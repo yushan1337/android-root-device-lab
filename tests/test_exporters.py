@@ -1,18 +1,28 @@
 import json
 
+from android_device_lab.exporters import (
+    DiagnosticReport,
+    build_report_warnings,
+    export_json_report,
+    export_markdown_report,
+)
 from android_device_lab.models import BatteryInfo, DeviceInfo, StorageInfo
-from android_device_lab.exporters import DiagnosticReport, export_json_report, export_markdown_report, build_report_warnings
 
 
 def test_export_json_report_writes_expected_fields(tmp_path) -> None:
     report = DiagnosticReport(
-    schema_version="1.0",
-    generated_at="2026-07-15_140000",
-    device_serial="ABC123",
-    device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
-    battery=BatteryInfo(level_percent=76, temperature_c=31.2),
-    storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage=37),
-    warnings=[],
+        schema_version="1.0",
+        generated_at="2026-07-15_140000",
+        device_serial="ABC123",
+        device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
+        battery=BatteryInfo(level_percent=76, temperature_c=31.2),
+        storage=StorageInfo(
+            total="110G",
+            used="40G",
+            available="70G",
+            use_percentage=37,
+        ),
+        warnings=[],
     )
     output = tmp_path / "report.json"
 
@@ -35,13 +45,18 @@ def test_export_json_report_writes_expected_fields(tmp_path) -> None:
 
 def test_export_markdown_report_writes_expected_sections(tmp_path) -> None:
     report = DiagnosticReport(
-    schema_version="1.0",
-    generated_at="2026-07-15_140000",
-    device_serial="ABC123",
-    device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
-    battery=BatteryInfo(level_percent=76, temperature_c=31.2),
-    storage=StorageInfo(total="110G", used="40G", available="70G", use_percentage=37),
-    warnings=[],
+        schema_version="1.0",
+        generated_at="2026-07-15_140000",
+        device_serial="ABC123",
+        device=DeviceInfo(model="Pixel 7", manufacturer="Google"),
+        battery=BatteryInfo(level_percent=76, temperature_c=31.2),
+        storage=StorageInfo(
+            total="110G",
+            used="40G",
+            available="70G",
+            use_percentage=37,
+        ),
+        warnings=[],
     )
     output = tmp_path / "report.md"
 

@@ -26,7 +26,8 @@
 - 采集函数：`adb.py` — `get_device_info()`, `get_battery_info()`, `get_storage_info()`, `list_devices()`, `resolve_device_serial()`
 - 解析函数：`parsers.py` — `parse_battery_info()`, `parse_storage_info()`, `parse_devices_output()`
 - 命令封装：`command.py` — `run_command()`, `CommandResult`
-- 报告导出：`exporters.py` — `export_json_report()`, `export_markdown_report()`
+- 报告导出：`exporters.py` — `DiagnosticReport`, `export_json_report()`, `export_markdown_report()`, `build_report_warnings()`
+- 展示格式：`presentation.py` — 字段中文标签、单位格式化、布尔值与 `N/A` 展示
 - CLI 入口：`cli.py` — `parse_args()`, `main()`
 
 ## CLI 设计决策
@@ -63,26 +64,37 @@ reports/YYYY-MM-DD_HHMMSS/
 └── report.md
 ```
 
-`DiagnosticReport` 由三个 dataclass 组成：
+`DiagnosticReport` 是报告层的数据契约，包含：
 
-- `DeviceInfo`
-- `BatteryInfo`
-- `StorageInfo`
+- `schema_version`：当前为 `1.0`，用于后续报告格式演进。
+- `generated_at`：报告生成时间。
+- `device_serial`：实际采集目标设备 serial。
+- `device`：`DeviceInfo`。
+- `battery`：`BatteryInfo`。
+- `storage`：`StorageInfo`。
+- `warnings`：命令成功但部分可选字段缺失时的非致命提示。
 
 JSON 和 Markdown 均从同一个 `DiagnosticReport` 生成，避免两套数据源不一致。
 
-当前 Markdown 报告仍直接使用 dataclass 字段名，例如：
+JSON 输出保持结构化数据：
+
+- `temperature_c` 保持数字，例如 `31.2`。
+- `voltage_mv` 保持整数，例如 `4210`。
+- `level_percent` / `use_percentage` 保持整数，例如 `76`、`37`。
+- `ac_powered` 保持布尔值。
+- 缺失字段使用 JSON `null`。
+- 不保存 `°C`、`mV`、`%`、`N/A` 等展示字符串。
+
+Markdown 和终端输出通过 `presentation.py` 统一转换为面向人的展示：
 
 ```text
-model
-android_version
-temperature_c
-ac_powered
-available
-use_percentage
+level_percent -> 电量 -> 76%
+temperature_c -> 温度 -> 31.2 °C
+ac_powered -> 交流电供电 -> 是 / 否
+None -> N/A
 ```
 
-这有利于当前阶段保持实现简单，但展示效果仍比较原始。后续可以增加字段名映射层，并在 Markdown / CLI 展示时补充 `°C`、`mV`、`%` 等单位。
+`warnings` 只表示“核心命令成功，但报告中某些字段不可用”。核心命令失败、ADB 超时、设备不可用等情况仍由命令层和设备发现层抛出显式异常，不降级为 warning。
 
 ## 测试策略
 
@@ -93,6 +105,8 @@ v0.1 的测试重点是不依赖真实 Android 设备的纯逻辑：
 - `parse_args()`：验证 CLI 参数解析。
 - 电池温度格式化：验证 Android 原始温度值和异常值的展示结果。
 - JSON / Markdown 导出：使用 `tmp_path` 验证报告文件内容。
+- 展示层格式化：验证 Markdown 单位、中文标签、`None` 到 `N/A` 的转换。
+- warning 生成：验证缺失字段会进入 `DiagnosticReport.warnings`。
 
 暂不测试真实 ADB 设备采集流程，因为这会引入设备连接状态、USB 授权、ROM 差异等不稳定因素。
 
@@ -189,7 +203,7 @@ available
 - 命令执行层已建立显式错误模型，包括非零退出码、命令不存在、超时和 `stderr` 保留。
 - CLI 普通模式会捕获项目异常并给出错误信息；`--verbose` 模式保留 traceback 以便调试。
 - 设备发现层已支持基础状态解析和自动选择；`unauthorized`、`offline` 等恢复建议仍可继续细化。
-- Markdown 报告目前使用原始字段名，尚未做中文字段名映射和单位美化。
-- 电池数据已在解析层规范化，但展示层仍需要统一的格式化函数处理 `None`、单位和布尔值。
+- Markdown 报告已使用中文字段名和单位展示。
+- 展示层格式化已集中到 `presentation.py`，供 Markdown 和 CLI 复用。
 - 存储信息目前只关注 `/data` 分区。
 - 不支持 logcat 分析、root 专项检测、GUI、多设备工作流或后台长期运行。

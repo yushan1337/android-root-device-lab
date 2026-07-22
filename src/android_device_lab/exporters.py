@@ -1,8 +1,9 @@
-from dataclasses import dataclass
-from dataclasses import asdict
-from pathlib import Path
-import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
+import json
+from pathlib import Path
+from typing import TextIO
+
 import android_device_lab.adb
 from android_device_lab.models import BatteryInfo, DeviceInfo, StorageInfo
 from android_device_lab.presentation import (
@@ -11,8 +12,6 @@ from android_device_lab.presentation import (
     STORAGE_FIELD_LABELS,
     format_report_value,
 )
-
-
 
 
 @dataclass(slots=True)
@@ -38,17 +37,18 @@ def export_json_report(report: DiagnosticReport, output: Path) -> None:
             indent=2,
         )
 
+
 def get_all_info(serial: str) -> DiagnosticReport:
     device_info = android_device_lab.adb.get_device_info(serial)
     battery_info = android_device_lab.adb.get_battery_info(serial)
     storage_info = android_device_lab.adb.get_storage_info(serial)
     warnings = build_report_warnings(
-    device=device_info,
-    battery=battery_info,
-    storage=storage_info,
+        device=device_info,
+        battery=battery_info,
+        storage=storage_info,
     )
 
-    report = DiagnosticReport(
+    return DiagnosticReport(
         schema_version="1.0",
         generated_at=datetime.now().strftime("%Y-%m-%d_%H%M%S"),
         device_serial=serial,
@@ -57,7 +57,7 @@ def get_all_info(serial: str) -> DiagnosticReport:
         storage=storage_info,
         warnings=warnings,
     )
-    return report
+
 
 def export_markdown_report(report: DiagnosticReport, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -70,28 +70,28 @@ def export_markdown_report(report: DiagnosticReport, output: Path) -> None:
         file.write("|---|---|\n")
         file.write(f"| Schema | {report.schema_version} |\n")
         file.write(f"| 生成时间 | {report.generated_at} |\n")
-        file.write(f"| 设备序列号 | {report.device_serial} |\n") 
+        file.write(f"| 设备序列号 | {report.device_serial} |\n")
 
         if report.warnings:
             file.write("\n## Warnings\n\n")
 
-        for warning in report.warnings:
-            file.write(f"- {warning}\n")
+            for warning in report.warnings:
+                file.write(f"- {warning}\n")
 
         write_markdown_section(
-        file=file,
-        title="设备信息",
-        values=report_dict["device"],
-        labels=DEVICE_FIELD_LABELS,
-        section="device",
+            file=file,
+            title="设备信息",
+            values=report_dict["device"],
+            labels=DEVICE_FIELD_LABELS,
+            section="device",
         )
 
         write_markdown_section(
-        file=file,
-        title="电池信息",
-        values=report_dict["battery"],
-        labels=BATTERY_FIELD_LABELS,
-        section="battery",
+            file=file,
+            title="电池信息",
+            values=report_dict["battery"],
+            labels=BATTERY_FIELD_LABELS,
+            section="battery",
         )
 
         write_markdown_section(
@@ -99,11 +99,12 @@ def export_markdown_report(report: DiagnosticReport, output: Path) -> None:
             title="存储信息",
             values=report_dict["storage"],
             labels=STORAGE_FIELD_LABELS,
-            section="storage"
+            section="storage",
         )
 
+
 def write_markdown_section(
-    file,
+    file: TextIO,
     title: str,
     values: dict[str, object | None],
     labels: dict[str, str],
