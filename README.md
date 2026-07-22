@@ -279,7 +279,6 @@ The diagnostic data model uses normalized internal fields. Display units such as
 - Device discovery handles basic `device`, `unauthorized`, `offline`, unknown state, missing serial, and multiple-device selection cases; richer recovery guidance can still be improved.
 - Storage reporting currently focuses on the `/data` partition.
 - Battery and storage parsing are implemented as standalone pure parser functions.
-- JSON / Markdown report field names are not yet localized or presentation-friendly.
 - Logcat analysis, root-specific checks, GUI, and multi-device workflows are out of scope for v0.1.
 
 ## Development Checks
