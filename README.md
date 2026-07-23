@@ -8,7 +8,7 @@ A Python + ADB based Android device diagnostics toolkit.
 - Collect battery and storage diagnostics
 - Export diagnostic reports as Markdown / JSON
 - Support command-line usage for automation
-- Analyze logcat output in later versions
+- Stream logcat output in real time with level and tag filters
 - Support rooted Android devices in later versions
 
 ## Current Version
@@ -24,7 +24,7 @@ This version focuses on Python engineering basics and a working ADB diagnostic w
 - JSON / Markdown report export
 - argparse-based CLI
 - logging
-- pytest tests for pure parsing, CLI, and report export logic
+- pytest tests for pure parsing, CLI, logcat command construction, and report export logic
 
 The Python prototype is not intended to be the final desktop product. It is the automation and validation layer for future iterations.
 
@@ -48,7 +48,8 @@ android-root-device-lab/
 │       ├── exporters.py      # JSON / Markdown report export
 │       ├── models.py         # Structured diagnostic data models
 │       ├── parsers.py        # Pure parsers for ADB command output
-│       └── presentation.py   # Human-readable labels and display formatting
+│       ├── presentation.py   # Human-readable labels and display formatting
+│       └── logcat.py         # Realtime logcat streaming and filter command construction
 ├── tests/                # pytest tests
 ├── reports/              # Generated diagnostic reports, ignored by Git
 ├── samples/              # Sample outputs
@@ -145,6 +146,9 @@ By default, this exports both JSON and Markdown reports.
 --device-info         Also print device information to the terminal.
 --battery-info        Also print battery information to the terminal.
 --storage-info        Also print storage information to the terminal.
+--logcat              Stream logcat output in real time. In this mode, reports are not generated.
+--logcat-level LEVEL  Minimum logcat level to display: V, D, I, W, E, F, or S.
+--logcat-tag TAG      Only display logcat messages from this tag.
 --verbose             Enable verbose logging.
 ```
 
@@ -198,6 +202,25 @@ PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli \
   --battery-info \
   --storage-info
 ```
+
+Stream realtime logcat output for the selected device:
+
+```bash
+PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli \
+  --logcat \
+  --logcat-level E
+```
+
+Stream logs from a specific tag and minimum level:
+
+```bash
+PYTHONPATH=src ./.venv/bin/python -m android_device_lab.cli \
+  --logcat \
+  --logcat-tag ActivityManager \
+  --logcat-level W
+```
+
+In `--logcat` mode, the CLI uses the same device selection rules as report mode. If exactly one usable device is connected, it is selected automatically. When multiple usable devices are connected, pass `--serial SERIAL_NUMBER`.
 
 ## Report Export
 
@@ -271,7 +294,9 @@ The diagnostic data model uses normalized internal fields. Display units such as
 - JSON and Markdown reports are generated from dataclass-based diagnostic data.
 - Reports include schema version, device serial, and non-fatal warnings for missing optional fields.
 - Presentation formatting is centralized in `presentation.py` so Markdown and terminal output share labels, units, boolean formatting, and `N/A` handling.
-- Tests focus on pure parsing, CLI argument parsing, display formatting, warning generation, and report export behavior.
+- Realtime logcat streaming is available through `--logcat`, with optional `--logcat-level` and `--logcat-tag` filters.
+- Logcat streaming uses `subprocess.Popen()` because `adb logcat` is a long-running process. Ctrl+C is treated as a normal user stop, and the adb subprocess is terminated to avoid leaving a background logcat process.
+- Tests focus on pure parsing, CLI argument parsing, display formatting, warning generation, logcat command construction, and report export behavior.
 
 ## Current Limitations
 
@@ -279,7 +304,7 @@ The diagnostic data model uses normalized internal fields. Display units such as
 - Device discovery handles basic `device`, `unauthorized`, `offline`, unknown state, missing serial, and multiple-device selection cases; richer recovery guidance can still be improved.
 - Storage reporting currently focuses on the `/data` partition.
 - Battery and storage parsing are implemented as standalone pure parser functions.
-- Logcat analysis, root-specific checks, GUI, and multi-device workflows are out of scope for v0.1.
+- Structured logcat summaries, saving raw logcat files, root-specific checks, GUI, and multi-device batch workflows are out of scope for v0.1.
 
 ## Development Checks
 
@@ -311,3 +336,4 @@ Current v0.1 test coverage includes:
 - battery temperature display formatting
 - JSON report export
 - Markdown report export
+- logcat command construction and CLI argument parsing

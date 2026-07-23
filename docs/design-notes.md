@@ -28,6 +28,7 @@
 - 命令封装：`command.py` — `run_command()`, `CommandResult`
 - 报告导出：`exporters.py` — `DiagnosticReport`, `export_json_report()`, `export_markdown_report()`, `build_report_warnings()`
 - 展示格式：`presentation.py` — 字段中文标签、单位格式化、布尔值与 `N/A` 展示
+- 实时日志：`logcat.py` — `build_logcat_command()`, `stream_logcat()`, `stop_process()`
 - CLI 入口：`cli.py` — `parse_args()`, `main()`
 
 ## CLI 设计决策
@@ -43,6 +44,9 @@ v0.1 已从早期菜单式交互改为 argparse 参数式 CLI。
 --device-info
 --battery-info
 --storage-info
+--logcat
+--logcat-level LEVEL
+--logcat-tag TAG
 --verbose
 ```
 
@@ -53,6 +57,8 @@ v0.1 已从早期菜单式交互改为 argparse 参数式 CLI。
 - `--output` 默认 `reports`，并在其下创建时间戳目录。
 - `--device-info`、`--battery-info`、`--storage-info` 只控制终端显示，不影响报告采集和导出。
 - `--verbose` 用于控制 logging 输出。
+- `--logcat` 是独立实时日志模式：启用后只读取 logcat，不生成 JSON / Markdown 报告。
+- `--logcat-level` 和 `--logcat-tag` 会被转换为 ADB logcat filter spec，例如 `*:E` 或 `ActivityManager:W *:S`。
 
 ## 报告导出设计
 
@@ -96,6 +102,42 @@ None -> N/A
 
 `warnings` 只表示“核心命令成功，但报告中某些字段不可用”。核心命令失败、ADB 超时、设备不可用等情况仍由命令层和设备发现层抛出显式异常，不降级为 warning。
 
+## 实时 Logcat 设计
+
+Day 6 的实际实现从原计划的“有限行数 Logcat 摘要”调整为“实时 Logcat stream”。当前目标是提供一个可手动观察设备日志的最小工具，而不是把日志统计写入诊断报告。
+
+CLI 参数：
+
+```text
+--logcat              启用实时 logcat 模式
+--logcat-level LEVEL  最低日志级别：V, D, I, W, E, F, S
+--logcat-tag TAG      只显示指定 tag 的日志
+```
+
+ADB filter spec 规则：
+
+```text
+无过滤                  -> adb -s SERIAL logcat
+仅 level=E              -> adb -s SERIAL logcat *:E
+tag=ActivityManager     -> adb -s SERIAL logcat ActivityManager:V *:S
+tag + level=W           -> adb -s SERIAL logcat ActivityManager:W *:S
+```
+
+实现取舍：
+
+- `adb logcat` 是长期运行命令，不能复用基于 `subprocess.run()` 的一次性命令封装。
+- `stream_logcat()` 使用 `subprocess.Popen()` 启动进程，并实时读取 `stdout`。
+- 用户按 Ctrl+C 时捕获 `KeyboardInterrupt`，视为正常停止，而不是程序错误。
+- `finally` 中调用 `stop_process()`，先 `terminate()`，等待超时后再 `kill()`，避免残留 `adb logcat` 子进程。
+- 不追求跨设备、跨 ROM、跨 ADB 版本的一致错误文本。实际验证中设备突然断开可能只有退出码而没有稳定 stderr。当前只保证不静默、不长期卡死、不残留子进程，并抛出基础 `LogcatStreamError`。
+
+当前未实现：
+
+- 不把 logcat 摘要写入 `DiagnosticReport`。
+- 不保存完整原始日志。
+- 不做 ANR / tombstone / native crash 深度分析。
+- 不做多设备并行实时监听。
+
 ## 测试策略
 
 v0.1 的测试重点是不依赖真实 Android 设备的纯逻辑：
@@ -107,6 +149,8 @@ v0.1 的测试重点是不依赖真实 Android 设备的纯逻辑：
 - JSON / Markdown 导出：使用 `tmp_path` 验证报告文件内容。
 - 展示层格式化：验证 Markdown 单位、中文标签、`None` 到 `N/A` 的转换。
 - warning 生成：验证缺失字段会进入 `DiagnosticReport.warnings`。
+- logcat 命令构造：验证 level / tag filter spec。
+- logcat CLI 参数：验证 `--logcat`、`--logcat-level`、`--logcat-tag` 的解析。
 
 暂不测试真实 ADB 设备采集流程，因为这会引入设备连接状态、USB 授权、ROM 差异等不稳定因素。
 
@@ -206,4 +250,4 @@ available
 - Markdown 报告已使用中文字段名和单位展示。
 - 展示层格式化已集中到 `presentation.py`，供 Markdown 和 CLI 复用。
 - 存储信息目前只关注 `/data` 分区。
-- 不支持 logcat 分析、root 专项检测、GUI、多设备工作流或后台长期运行。
+- 已支持单设备实时 logcat stream，但不支持结构化 logcat 摘要、原始日志归档、GUI、多设备并行监听或后台长期运行。
